@@ -1,0 +1,15 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="DotsLauncher.App"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="Window"><Setter Property="Background" Value="#141719" /><Setter Property="Foreground" Value="#F1F3F4" /><Setter Property="FontFamily" Value="Inter" /><Setter Property="FontSize" Value="14" /></Style>
+    <Style Selector="Button"><Setter Property="CornerRadius" Value="0" /><Setter Property="Background" Value="#1C2023" /><Setter Property="Foreground" Value="#F1F3F4" /><Setter Property="BorderBrush" Value="#353B40" /><Setter Property="BorderThickness" Value="1" /><Setter Property="Padding" Value="14,9" /></Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter"><Setter Property="Background" Value="#343E40" /></Style>
+    <Style Selector="TextBox"><Setter Property="CornerRadius" Value="0" /><Setter Property="Background" Value="#101315" /><Setter Property="Foreground" Value="#F1F3F4" /><Setter Property="BorderBrush" Value="#353B40" /><Setter Property="Padding" Value="11,9" /></Style>
+    <Style Selector="ContextMenu"><Setter Property="CornerRadius" Value="0" /><Setter Property="Background" Value="#242A2E" /><Setter Property="BorderBrush" Value="#465057" /><Setter Property="BorderThickness" Value="1" /><Setter Property="Padding" Value="0" /></Style>
+    <Style Selector="MenuItem"><Setter Property="Padding" Value="14,10" /><Setter Property="CornerRadius" Value="0" /><Setter Property="MinWidth" Value="170" /></Style>
+    <Style Selector="ToolTip"><Setter Property="CornerRadius" Value="0" /></Style>
+  </Application.Styles>
+</Application>

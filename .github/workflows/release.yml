@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet run --project DotsLauncher.Tests/DotsLauncher.Tests.csproj -c Release
+
+  windows:
+    needs: test
+    runs-on: windows-latest
+    strategy:
+      matrix: { rid: [win-x64, win-arm64] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: 10.0.x }
+      - shell: pwsh
+        run: |
+          dotnet publish DotsLauncher/DotsLauncher.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o publish
+          New-Item publish/portable.flag -ItemType File
+          Compress-Archive -Path publish/DotsLauncher.exe,publish/portable.flag -DestinationPath DotsLauncher-${{ matrix.rid }}-portable.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DotsLauncher-${{ matrix.rid }}
+          path: DotsLauncher-${{ matrix.rid }}-portable.zip
+
+  linux:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { rid: [linux-x64, linux-arm64] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: 10.0.x }
+      - run: |
+          dotnet publish DotsLauncher/DotsLauncher.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o publish
+          chmod +x publish/DotsLauncher
+          tar -C publish -czf DotsLauncher-${{ matrix.rid }}.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DotsLauncher-${{ matrix.rid }}
+          path: DotsLauncher-${{ matrix.rid }}.tar.gz
+
+  macos:
+    needs: test
+    runs-on: macos-latest
+    strategy:
+      matrix: { rid: [osx-x64, osx-arm64] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: 10.0.x }
+      - run: |
+          dotnet publish DotsLauncher/DotsLauncher.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o publish
+          mkdir -p "Dots Launcher.app/Contents/MacOS"
+          cp -R publish/* "Dots Launcher.app/Contents/MacOS/"
+          cp packaging/macos/Info.plist "Dots Launcher.app/Contents/Info.plist"
+          chmod +x "Dots Launcher.app/Contents/MacOS/DotsLauncher"
+          ditto -c -k --sequesterRsrc --keepParent "Dots Launcher.app" DotsLauncher-${{ matrix.rid }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DotsLauncher-${{ matrix.rid }}
+          path: DotsLauncher-${{ matrix.rid }}.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows, linux, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes --title "Dots Launcher $GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}

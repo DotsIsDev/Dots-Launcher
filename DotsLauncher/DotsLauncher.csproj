@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>DotsLauncher</AssemblyName>
+    <RootNamespace>DotsLauncher</RootNamespace>
+    <Product>Dots Launcher</Product>
+    <Description>A cross-platform desktop executable launcher.</Description>
+    <Version>1.1.0</Version>
+    <ApplicationIcon Condition="$([MSBuild]::IsOSPlatform('Windows'))">Assets\DotsLauncher.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../DotsLauncher.Core/DotsLauncher.Core.csproj" />
+    <PackageReference Include="Avalonia" Version="12.1.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.2" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+    <AvaloniaResource Include="Assets\DotsLauncher.png" />
+  </ItemGroup>
+</Project>

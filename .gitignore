@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+.avalonia-scaffold/
+artifacts/
+.vs/
+.idea/
+*.user
+*.suo
