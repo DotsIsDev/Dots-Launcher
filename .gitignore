@@ -4,5 +4,6 @@
 artifacts/
 .vs/
 .idea/
+.tools/
 *.user
 *.suo
