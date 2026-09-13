@@ -27,7 +27,6 @@ public static class IconService
 
     public static void Invalidate()
     {
-        foreach (var bitmap in Cache.Values.OfType<IDisposable>()) bitmap.Dispose();
         Cache.Clear();
     }
 

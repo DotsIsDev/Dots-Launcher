@@ -24,7 +24,16 @@ public partial class App : Application
             if (index >= 0 && index + 1 < args.Length) dataDirectory = Path.GetFullPath(args[index + 1]);
             string key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dataDirectory)))[..20];
             instanceMutex = new Mutex(true, "DotsLauncher-" + key, out bool created);
-            if (created) desktop.MainWindow = new MainWindow(new LibraryStore(dataDirectory));
+            if (created)
+            {
+                try { desktop.MainWindow = new MainWindow(new LibraryStore(dataDirectory)); }
+                catch (Exception ex)
+                {
+                    Directory.CreateDirectory(dataDirectory);
+                    File.WriteAllText(Path.Combine(dataDirectory, "startup-error.log"), ex.ToString());
+                    desktop.Shutdown(1);
+                }
+            }
             else desktop.Shutdown();
             desktop.Exit += (_, _) => instanceMutex?.Dispose();
         }

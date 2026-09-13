@@ -2,6 +2,10 @@
 
 Dots Launcher is a square-edged desktop launcher for Windows, Linux, and macOS. It collects applications from folders, displays their icons, and keeps favourites, launch arguments, custom titles, custom icons, search, multi-select, and grid/list views in one library.
 
+## Preview
+
+![Dots Launcher showing a collection of popular games](docs/images/dots-launcher-games.jpg)
+
 ## Downloads
 
 GitHub Releases produce self-contained builds; no .NET installation is required.

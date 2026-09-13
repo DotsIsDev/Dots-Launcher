@@ -22,7 +22,7 @@ public sealed class MainWindow : Window
     {
         this.store=store; data=store.Load(); Title="Dots Launcher"; Width=1140; Height=840; MinWidth=800; MinHeight=560; Background=Bg; WindowStartupLocation=WindowStartupLocation.CenterScreen;
         Icon=new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://DotsLauncher/Assets/DotsLauncher.png"))); Content=Build(); search.TextChanged+=(_,_)=>RefreshView();
-        debounce.Tick+=async(_,_)=>{debounce.Stop();await Scan();}; Opened+=async(_,_)=>{RefreshView();Watch();await Scan();if(store.RecoveryMessage is not null)await UiDialogs.ShowMessage(this,store.RecoveryMessage);};
+        debounce.Tick+=async(_,_)=>{debounce.Stop();await Scan();}; Opened+=async(_,_)=>{try{RefreshView();Watch();await Scan();if(store.RecoveryMessage is not null)await UiDialogs.ShowMessage(this,store.RecoveryMessage);}catch(Exception ex){Directory.CreateDirectory(store.DirectoryPath);File.WriteAllText(Path.Combine(store.DirectoryPath,"startup-error.log"),ex.ToString());}};
         Closed+=(_,_)=>{closed=true;debounce.Stop();foreach(var w in watchers)w.Dispose();IconService.Invalidate();}; KeyDown+=async(_,e)=>{if(e.Key==Key.F5){e.Handled=true;await Scan();}else if(e.Key==Key.F&&e.KeyModifiers.HasFlag(KeyModifiers.Control)){search.Focus();search.SelectAll();}else if(e.Key==Key.Escape&&selecting)ClearSelection();};
     }
 
