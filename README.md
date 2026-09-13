@@ -18,6 +18,19 @@ GitHub Releases produce self-contained builds; no .NET installation is required.
 
 Windows portable archives include `portable.flag`, so the library is stored in the adjacent `data` folder. Other builds use the operating system's local application-data directory. `--portable` enables adjacent storage on any platform; `--data-dir PATH` chooses an explicit location.
 
+### Windows publisher and SmartScreen
+
+An unsigned Windows build displays **Unknown publisher** and can trigger Microsoft Defender SmartScreen. The release workflow supports Microsoft Artifact Signing so tagged releases can carry a verified publisher identity. Configure an Artifact Signing account with a Public Trust certificate profile and add these repository Actions secrets:
+
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+- `AZURE_ARTIFACT_SIGNING_ENDPOINT`
+- `AZURE_ARTIFACT_SIGNING_ACCOUNT`
+- `AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE`
+
+The Windows jobs sign and verify `DotsLauncher.exe` before creating the portable archives. Tagged releases fail instead of publishing an unsigned Windows executable when signing is not configured. New certificates and binaries can still show an initial SmartScreen reputation warning; using the same trusted signing identity for every release allows reputation to accumulate. Microsoft Store distribution is the only option that avoids SmartScreen download warnings immediately.
+
 The macOS archives are unsigned development builds. On first launch, use **Open** from Finder's context menu if Gatekeeper blocks the app. Signing and notarization require an Apple Developer identity.
 
 ## Platform support

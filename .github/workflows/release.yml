@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
@@ -21,6 +21,11 @@ jobs:
   windows:
     needs: test
     runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARTIFACT_SIGNING_ENABLED: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT != '' }}
     strategy:
       matrix: { rid: [win-x64, win-arm64] }
     steps:
@@ -30,6 +35,45 @@ jobs:
       - shell: pwsh
         run: |
           dotnet publish DotsLauncher/DotsLauncher.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o publish
+      - name: Require signing for tagged releases
+        if: startsWith(github.ref, 'refs/tags/') && env.ARTIFACT_SIGNING_ENABLED != 'true'
+        shell: pwsh
+        run: throw 'Windows signing is not configured. Add the Azure Artifact Signing repository secrets before publishing a release tag.'
+      - name: Sign in to Azure
+        if: env.ARTIFACT_SIGNING_ENABLED == 'true'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Sign Windows executable
+        if: env.ARTIFACT_SIGNING_ENABLED == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE }}
+          files: ${{ github.workspace }}\publish\DotsLauncher.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+          description: Dots Launcher
+          description-url: https://github.com/DotsIsDev/Dots-Launcher
+      - name: Verify Windows signature
+        if: env.ARTIFACT_SIGNING_ENABLED == 'true'
+        shell: pwsh
+        run: |
+          $signature = Get-AuthenticodeSignature publish/DotsLauncher.exe
+          if ($signature.Status -ne 'Valid') {
+            throw "Authenticode verification failed: $($signature.Status)"
+          }
+          Write-Host "Signed by $($signature.SignerCertificate.Subject)"
+      - name: Report unsigned Windows build
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && env.ARTIFACT_SIGNING_ENABLED != 'true' }}
+        shell: pwsh
+        run: Write-Warning 'Windows signing is not configured. This build will show Unknown publisher and may trigger SmartScreen.'
+      - shell: pwsh
+        run: |
           New-Item publish/portable.flag -ItemType File
           Compress-Archive -Path publish/DotsLauncher.exe,publish/portable.flag -DestinationPath DotsLauncher-${{ matrix.rid }}-portable.zip
       - uses: actions/upload-artifact@v4
@@ -80,6 +124,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [windows, linux, macos]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
