@@ -81,6 +81,7 @@ jobs:
     needs: [windows, linux, macos]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { path: dist, merge-multiple: true }
       - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes --title "Dots Launcher $GITHUB_REF_NAME"
